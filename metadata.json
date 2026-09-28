@@ -1,6 +1,0 @@
-{
-  "name": "Boinkers Slot Machine Game",
-  "description": "A highly polished, interactive slot machine clicker game inspired by Telegram mini-apps, featuring spinning reels, auto-spin, sound effects, item upgrades, and a cosmic roadmap.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

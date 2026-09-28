@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/*
+ * Squid League design tokens.
+ * Theme: dark only (the brand is a night arena). One accent: pink.
+ * Shape rule: no border radius anywhere. Elevated or interactive surfaces get
+ * a chamfer on the top-right and bottom-left corners (`chamfer` utility).
+ * Z-index scale: header 40, mobile menu 50, grain overlay 60.
+ */
+@theme {
+  --color-ink: #0a0a0c;
+  --color-ink-2: #111115;
+  --color-ink-3: #19191f;
+  --color-ink-4: #24242c;
+  --color-chalk: #f3f2ee;
+  --color-mute: #a6a5ae;
+  --color-dim: #7a7983;
+  --color-pink: #ff2d6b;
+  --color-pink-soft: #ff5c8d;
+  --color-pink-deep: #5c0b24;
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-rise: rise 0.9s var(--ease-snap) both;
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 0.35em, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  --animate-marquee: marquee 42s linear infinite;
+  @keyframes marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-chalk);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Film grain, fixed so it never repaints with scroll. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background-image: url("/images/grain.png");
+  background-size: 256px;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+::selection {
+  background: var(--color-pink);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 3px;
+}
+
+/* Condensed, heavy, uppercase: the broadcast headline voice. */
+@utility display {
+  font-stretch: 62.5%;
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.88;
+  letter-spacing: -0.005em;
+}
+
+@utility chamfer {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut, 12px)) 0,
+    100% var(--cut, 12px),
+    100% 100%,
+    var(--cut, 12px) 100%,
+    0 calc(100% - var(--cut, 12px))
+  );
+}
+
+@utility hazard {
+  background-image: repeating-linear-gradient(-45deg, var(--color-pink) 0 10px, transparent 10px 20px);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Native accordion: remove marker, animate open state where supported. */
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 0.45s var(--ease-snap),
+      content-visibility 0.45s allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-marquee,
+  .animate-rise {
+    animation: none;
+  }
+  details::details-content {
+    transition: none;
+  }
+}
