@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { ListIcon, XIcon } from "@phosphor-icons/react";
 import { PlayButton } from "@/components/ui/button";
@@ -37,9 +38,9 @@ export function SiteHeader() {
         }`}
       >
         <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-6 px-4 sm:px-6 lg:px-10">
-          <a href="#top" aria-label="Last Squad, inicio" onClick={() => setOpen(false)}>
+          <Link href="/#top" aria-label="Last Squad, inicio" onClick={() => setOpen(false)}>
             <Logo />
-          </a>
+          </Link>
 
           <nav aria-label="Principal" className="hidden lg:block">
             <ul className="flex items-center gap-8">

@@ -1,4 +1,5 @@
 import { RoundSimulator } from "@/components/round-simulator";
+import { ButtonLink } from "@/components/ui/button";
 import { Reveal } from "@/components/ui/reveal";
 
 export function Simulator() {
@@ -17,10 +18,15 @@ export function Simulator() {
         <Reveal className="mt-12" delay={0.1}>
           <RoundSimulator />
         </Reveal>
-        <p className="mt-4 text-sm text-dim">
-          Resultados simulados con equipos que han competido en el circuito de THE FINALS. No es la lista
-          oficial de ningún torneo.
-        </p>
+        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-[40rem] text-sm text-dim">
+            Resultados simulados con equipos que han competido en el circuito de THE FINALS. No es la lista
+            oficial de ningún torneo.
+          </p>
+          <ButtonLink href="/jugar" arrow>
+            Jugar una liga completa
+          </ButtonLink>
+        </div>
       </div>
     </section>
   );

@@ -35,8 +35,13 @@ Major 2026 y los resultados son simulados. Actualiza los equipos cuando se cierr
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:3000        (web)
+                   # http://localhost:3000/jugar  (juego completo)
 ```
+
+En `/jugar` creas una liga (tu nombre, nombre de la liga y 7, 15 o 23 rivales) y juegas las seis
+rondas contra jugadores simulados que eligen equipo cada ronda. La partida y tu perfil de puntos se
+guardan en el navegador (`localStorage`).
 
 | Script              | Qué hace                            |
 | ------------------- | ----------------------------------- |
@@ -51,10 +56,10 @@ npm run dev        # http://localhost:3000
 
 Copia `.env.example` a `.env.local`:
 
-| Variable               | Uso                                                                                          |
-| ---------------------- | -------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL` | URL pública. Se usa en canonical, sitemap, robots y Open Graph.                              |
-| `NEXT_PUBLIC_PLAY_URL` | Destino de todos los botones "Jugar gratis". Si está vacía, llevan a la demo (`#simulador`). |
+| Variable               | Uso                                                                                     |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL` | URL pública. Se usa en canonical, sitemap, robots y Open Graph.                         |
+| `NEXT_PUBLIC_PLAY_URL` | Destino de todos los botones "Jugar gratis". Si está vacía, llevan al juego (`/jugar`). |
 
 ## Estructura
 
@@ -62,17 +67,21 @@ Copia `.env.example` a `.env.local`:
 app/
   layout.tsx            Fuentes, metadata SEO, viewport
   page.tsx              Composición de secciones + JSON-LD (WebSite y FAQPage)
+  jugar/page.tsx        Página del juego
   globals.css           Tokens de diseño, utilidades (display, chamfer, hazard)
   opengraph-image.tsx   Imagen social generada en build
   icon.svg, manifest.ts, robots.ts, sitemap.ts, not-found.tsx
 components/
   sections/             Una sección de la landing por archivo
-  round-simulator.tsx   Demo jugable: 5 Cashouts + 1 Final Round (cliente)
+  round-simulator.tsx   Demo de la portada: 5 Cashouts + 1 Final Round (cliente)
+  game/board.tsx        Tablero compartido: partidas, marcador de rondas, contadores
+  game/league-game.tsx  Juego completo de /jugar: liga, rivales, clasificación, historial
   hero-pick-card.tsx    Tarjeta animada del hero (cliente)
   site-header.tsx       Navegación fija + menú móvil (cliente)
   ui/                   Botones, etiquetas de equipo, logo, animación de entrada
 lib/
-  game.ts               Lógica pura del simulador (reducer + RNG inyectado)
+  game.ts               Partidas, resultados y demo de la portada (RNG inyectado)
+  league.ts             Motor de la liga completa: rivales, reenganche, desenlaces y puntos
   teams.ts              Equipos de la demo (ratings orientativos, no son datos reales)
   content.ts            Preguntas frecuentes
   format.ts             Formato de dinero y nombres de modos

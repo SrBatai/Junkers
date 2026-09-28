@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
 import { site } from "@/lib/site";
 
@@ -36,8 +37,8 @@ export function ButtonLink({
   children,
   ...props
 }: ButtonLinkProps) {
-  return (
-    <a className={buttonClass(variant, size, className)} {...props}>
+  const content = (
+    <>
       {children}
       {arrow && (
         <ArrowRightIcon
@@ -46,6 +47,20 @@ export function ButtonLink({
           className="size-[18px] transition-transform duration-200 ease-snap group-hover:translate-x-0.5"
         />
       )}
+    </>
+  );
+  // Internal routes get client-side navigation; hashes and external URLs stay plain links.
+  if (props.href?.startsWith("/") && !props.href.startsWith("/#")) {
+    const { href, ...rest } = props;
+    return (
+      <Link href={href} className={buttonClass(variant, size, className)} {...rest}>
+        {content}
+      </Link>
+    );
+  }
+  return (
+    <a className={buttonClass(variant, size, className)} {...props}>
+      {content}
     </a>
   );
 }
