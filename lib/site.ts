@@ -13,6 +13,7 @@ export const nav = [
   { href: "/#como-funciona", label: "Cómo funciona" },
   { href: "/#simulador", label: "Pruébalo" },
   { href: "/#competiciones", label: "Competiciones" },
+  { href: "/ligas", label: "Ligas" },
   { href: "/#premium", label: "Premium" },
   { href: "/#faq", label: "FAQ" },
 ] as const;

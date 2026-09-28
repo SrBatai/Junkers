@@ -14,6 +14,38 @@ eliges un equipo; si cae, caes con él. El último superviviente se lleva el bot
 - **Final Round** (cara a cara, 3v3): tu equipo tiene que **ganar**.
 - Si no, quedas eliminado. Desenlaces posibles: único ganador, reparto del bote o todos eliminados.
 
+## Ligas con amigos (cuentas y base de datos)
+
+- `/entrar`: crear cuenta o entrar (usuario y contraseña).
+- `/ligas`: tus ligas, crear una o unirte con un código de 6 caracteres.
+- `/ligas/unirse/CODIGO`: enlace de invitación para compartir.
+- `/ligas/[id]`: la liga. El creador empieza la liga, juega cada ronda y abre la siguiente. Cada
+  jugador elige su equipo (se puede cambiar hasta que se juega la ronda) y nadie ve los equipos de los
+  demás hasta el resultado. Quien no elige a tiempo queda eliminado. Un reenganche por jugador y liga.
+  La pantalla se refresca sola cada 6 segundos.
+
+**Base de datos**: Supabase (proyecto OWPro), tablas con prefijo `ls_`. La migración está en
+`supabase/migrations/`. No usa Supabase Auth, porque el trigger de `auth.users` de ese proyecto crearía
+perfiles en la app OWPro. Last Squad tiene sus propias cuentas:
+
+- Contraseñas con bcrypt (`pgcrypto`), sesiones con token aleatorio guardado como hash SHA-256 y cookie
+  `httpOnly` de 30 días.
+- Las tablas tienen RLS activado, sin políticas y sin permisos para `anon`/`authenticated`: todo pasa
+  por funciones `ls_*` (`SECURITY DEFINER`) que validan sesión, pertenencia y propietario.
+- Los resultados de cada ronda los simula el servidor de Next.js y los envía el creador de la liga; la
+  base de datos comprueba que cuadran con las partidas y decide quién sobrevive. El creador, en teoría,
+  podría enviar resultados a mano llamando a la API: es aceptable para ligas entre amigos.
+
+Variables necesarias en `.env.local` (solo servidor):
+
+```bash
+SUPABASE_URL="https://awxdtfvcpmmzretesido.supabase.co"
+SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."   # clave publicable del proyecto
+```
+
+Sin esas variables la web y `/jugar` funcionan igual; `/entrar` avisa de que falta configurar la base de
+datos.
+
 ## Competiciones que aparecen en la web
 
 - **The Grand Major 2026**: DreamHack Estocolmo, 27-29 de noviembre de 2026, 16 equipos, 150.000 $.
@@ -67,7 +99,8 @@ Copia `.env.example` a `.env.local`:
 app/
   layout.tsx            Fuentes, metadata SEO, viewport
   page.tsx              Composición de secciones + JSON-LD (WebSite y FAQPage)
-  jugar/page.tsx        Página del juego
+  jugar/page.tsx        Página del juego contra la máquina
+  entrar/, ligas/       Cuentas y ligas con amigos
   globals.css           Tokens de diseño, utilidades (display, chamfer, hazard)
   opengraph-image.tsx   Imagen social generada en build
   icon.svg, manifest.ts, robots.ts, sitemap.ts, not-found.tsx
@@ -86,6 +119,10 @@ lib/
   content.ts            Preguntas frecuentes
   format.ts             Formato de dinero y nombres de modos
   site.ts               Nombre, URLs y navegación
+  friends.ts            Tipos y conversión de datos de las ligas con amigos
+  actions.ts            Server Actions (cuentas, ligas, rondas)
+  server/               Cliente de Supabase y sesión (solo servidor)
+supabase/migrations/    SQL de las tablas y funciones ls_*
 ```
 
 ## Sistema de diseño
