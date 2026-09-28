@@ -21,7 +21,8 @@ eliges un equipo; si cae, caes con él. El último superviviente se lleva el bot
 - `/ligas/unirse/CODIGO`: enlace de invitación para compartir.
 - `/ligas/[id]`: la liga. El creador empieza la liga, juega cada ronda y abre la siguiente. Cada
   jugador elige su equipo (se puede cambiar hasta que se juega la ronda) y nadie ve los equipos de los
-  demás hasta el resultado. Quien no elige a tiempo queda eliminado. Un reenganche por jugador y liga.
+  demás hasta el resultado. Quien no elige a tiempo queda eliminado. Un reenganche por jugador y liga: si
+  quien acaba de caer aún lo tiene, la liga espera a que decida antes de declarar ganador.
   La pantalla se refresca sola cada 6 segundos.
 
 **Base de datos**: Supabase (proyecto OWPro), tablas con prefijo `ls_`. La migración está en

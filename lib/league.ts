@@ -181,24 +181,39 @@ export function resolveRound(league: League, rand: Rand): League {
 
   const alive = players.filter((p) => p.out === null);
   const aliveBefore = league.players.filter((p) => p.out === null);
+  // If you just fell and still hold your rebuy, the league waits for your decision.
+  const rebuyPending =
+    league.rebuyAvailable && league.round < ROUNDS && players.some((p) => p.you && p.out === league.round);
   let ending: Ending | null = null;
   let winners: string[] = [];
-  if (alive.length === 0) {
+  if (league.round >= ROUNDS) {
+    ending = alive.length === 0 ? "wipeout" : alive.length === 1 ? "solo" : "split";
+    winners = alive.map((p) => p.id);
+  } else if (!rebuyPending && alive.length === 0) {
     ending = "wipeout";
-  } else if (alive.length === 1 && aliveBefore.length > 1) {
+  } else if (!rebuyPending && alive.length === 1 && aliveBefore.length > 1) {
     ending = "solo";
     winners = [alive[0].id];
-  } else if (league.round >= ROUNDS) {
-    ending = alive.length === 1 ? "solo" : "split";
-    winners = alive.map((p) => p.id);
   }
 
   const next: League = { ...league, phase: "result", results, players, ending, winners };
   return ending ? { ...next, points: pointsFor(next, youOf(next)) } : next;
 }
 
+function settle(league: League): League {
+  const alive = alivePlayers(league);
+  const next: League = {
+    ...league,
+    ending: alive.length === 0 ? "wipeout" : "solo",
+    winners: alive.map((p) => p.id),
+  };
+  return { ...next, points: pointsFor(next, youOf(next)) };
+}
+
 export function nextRound(league: League, rand: Rand): League {
   if (league.phase !== "result" || league.ending) return league;
+  // The rebuy window closed without enough players left: the league is over.
+  if (alivePlayers(league).length <= 1) return settle(league);
   const round = league.round + 1;
   return { ...league, round, phase: "pick", matches: makeMatches(round, rand), results: null, pick: null };
 }

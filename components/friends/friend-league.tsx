@@ -300,7 +300,8 @@ export function FriendLeague({ state }: { state: FriendLeagueState }) {
               {serverPick.survived ? "Sobrevives" : me.out_round === null ? "Reenganchado" : "Eliminado"}
             </Stamp>
             <p className="mt-6 leading-relaxed text-mute">
-              {describeResult(serverPick.team_id, myResult)} Quedan {alive.length} en pie.
+              {describeResult(serverPick.team_id, myResult)}{" "}
+              {alive.length === 1 ? "Queda 1 en pie." : `Quedan ${alive.length} en pie.`}
             </p>
           </>
         ) : fellNow ? (
@@ -310,8 +311,12 @@ export function FriendLeague({ state }: { state: FriendLeagueState }) {
           </>
         ) : (
           <p className="leading-relaxed text-mute">
-            Ronda {league.round} jugada. Quedan {alive.length} en pie.
+            Ronda {league.round} jugada.{" "}
+            {alive.length === 1 ? "Queda 1 en pie." : `Quedan ${alive.length} en pie.`}
           </p>
+        )}
+        {alive.length <= 1 && (
+          <p className="mt-3 text-sm text-mute">Si nadie usa su reenganche, la liga termina aquí.</p>
         )}
         <div className="mt-auto flex flex-col gap-2 pt-6">
           {canRebuy && (
@@ -332,11 +337,15 @@ export function FriendLeague({ state }: { state: FriendLeagueState }) {
               onClick={() => act(() => nextRound(league.id, league.round))}
               className={buttonClass(canRebuy ? "secondary" : "primary", "md", "w-full")}
             >
-              Abrir ronda {league.round + 1}
+              {alive.length <= 1 ? "Terminar liga" : `Abrir ronda ${league.round + 1}`}
               <ArrowRightIcon weight="bold" className="size-[18px]" aria-hidden />
             </button>
           ) : (
-            <p className="text-sm text-mute">Esperando a que {owner?.username} abra la siguiente ronda.</p>
+            <p className="text-sm text-mute">
+              {alive.length <= 1
+                ? `Esperando a que ${owner?.username} cierre la liga.`
+                : `Esperando a que ${owner?.username} abra la siguiente ronda.`}
+            </p>
           )}
         </div>
       </>
