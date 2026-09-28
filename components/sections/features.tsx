@@ -24,8 +24,8 @@ const groups = [
       { icon: LightningIcon, title: "Resultados en tiempo real", body: "Automáticos y sin retrasos." },
       {
         icon: TargetIcon,
-        title: "Sin plantillas ni estadísticas",
-        body: "Solo tú, la jornada y una decisión.",
+        title: "Sin estadísticas complicadas",
+        body: "Solo tú, la ronda y una decisión.",
       },
     ],
   },

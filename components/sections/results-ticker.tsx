@@ -1,25 +1,25 @@
 // Illustrative picks for the ticker. Not real results.
 const picks = [
-  { pick: "Real Betis", rival: "Getafe", score: "2-0", ok: true },
-  { pick: "Arsenal", rival: "Brentford", score: "3-1", ok: true },
-  { pick: "Villarreal", rival: "Celta", score: "1-1", ok: false },
-  { pick: "Liverpool", rival: "West Ham", score: "2-0", ok: true },
-  { pick: "Athletic", rival: "Osasuna", score: "0-1", ok: false },
-  { pick: "Real Madrid", rival: "Valencia", score: "4-1", ok: true },
-  { pick: "Chelsea", rival: "Crystal Palace", score: "1-1", ok: false },
-  { pick: "Real Sociedad", rival: "Sevilla", score: "2-1", ok: true },
-  { pick: "Man City", rival: "Brighton", score: "3-0", ok: true },
-  { pick: "Atlético", rival: "Getafe", score: "0-0", ok: false },
+  { team: "NTMR", mode: "Cashout", result: "1º", ok: true },
+  { team: "Fnatic", mode: "Cashout", result: "3º", ok: false },
+  { team: "Team Secret", mode: "Final Round", result: "2-1", ok: true },
+  { team: "KingZero", mode: "Cashout", result: "2º", ok: true },
+  { team: "TSM", mode: "Final Round", result: "0-2", ok: false },
+  { team: "Spacestation Gaming", mode: "Cashout", result: "2º", ok: true },
+  { team: "777rs", mode: "Cashout", result: "4º", ok: false },
+  { team: "Unphased", mode: "Cashout", result: "1º", ok: true },
+  { team: "MIRGG", mode: "Final Round", result: "1-2", ok: false },
+  { team: "Alliance", mode: "Cashout", result: "2º", ok: true },
 ];
 
 function Row({ hidden = false }: { hidden?: boolean }) {
   return (
     <ul aria-hidden={hidden || undefined} className="flex shrink-0 items-center">
       {picks.map((p) => (
-        <li key={p.pick + p.rival} className="flex items-center gap-3 px-6 whitespace-nowrap">
-          <span className="text-[15px] font-semibold text-chalk">{p.pick}</span>
-          <span className="font-mono text-[15px] text-chalk tabular-nums">{p.score}</span>
-          <span className="text-[15px] text-mute">{p.rival}</span>
+        <li key={p.team + p.mode} className="flex items-center gap-3 px-6 whitespace-nowrap">
+          <span className="text-[15px] font-semibold text-chalk">{p.team}</span>
+          <span className="text-[15px] text-mute">{p.mode}</span>
+          <span className="font-mono text-[15px] text-chalk tabular-nums">{p.result}</span>
           <span
             className={`ml-1 text-xs font-black tracking-[0.08em] uppercase [font-stretch:75%] ${
               p.ok ? "text-chalk/70" : "text-pink"
@@ -40,7 +40,7 @@ export function ResultsTicker() {
       <div className="flex h-14 items-stretch">
         <div className="relative z-10 flex shrink-0 items-center gap-3 bg-pink px-4 text-ink sm:px-6">
           <span className="text-[13px] font-black tracking-[0.08em] uppercase [font-stretch:75%]">
-            Jornada de ejemplo
+            Ronda de ejemplo
           </span>
         </div>
         <div className="relative flex min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_6%,#000_94%,transparent)]">

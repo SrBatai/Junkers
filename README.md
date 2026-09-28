@@ -1,11 +1,27 @@
-# Squid League · Web
+# Last Squad · Web
 
-Landing page de **Squid League**: elige un equipo en cada jornada; si no gana, quedas eliminado. El último
-superviviente se lleva el bote.
+Landing page de **Last Squad**, un juego de supervivencia para los esports de **THE FINALS**: cada ronda
+eliges un equipo; si cae, caes con él. El último superviviente se lleva el bote.
 
-Dirección visual: plató de concurso televisivo en un estadio de noche (referencia estética: el tono de
-_game show_ de THE FINALS). Tema oscuro, un único acento rosa, tipografía condensada de retransmisión y
-esquinas achaflanadas.
+> Proyecto fan. Last Squad no está afiliado, patrocinado ni aprobado por Embark Studios. THE FINALS es una
+> marca de Embark Studios AB y los nombres de los equipos pertenecen a sus respectivos dueños. La web no
+> reproduce logos del juego ni de los equipos.
+
+## Reglas del juego
+
+- Cada ronda eliges **un equipo** de la competición en juego. Cada equipo solo se puede usar **una vez**.
+- **Cashout** (4 equipos, 3v3v3v3): tu equipo tiene que acabar **entre los dos primeros**.
+- **Final Round** (cara a cara, 3v3): tu equipo tiene que **ganar**.
+- Si no, quedas eliminado. Desenlaces posibles: único ganador, reparto del bote o todos eliminados.
+
+## Competiciones que aparecen en la web
+
+- **The Grand Major 2026**: DreamHack Estocolmo, 27-29 de noviembre de 2026, 16 equipos, 150.000 $.
+- Su camino de clasificación: **Online Series** por regiones y **clasificatorios** de APAC, Américas y EMEA.
+- **The Grand Major 2025**: ganado por NTMR (100.000 $ en premios).
+
+La demo usa 16 equipos que han competido en el circuito (`lib/teams.ts`). **No** es la lista oficial del Grand
+Major 2026 y los resultados son simulados. Actualiza los equipos cuando se cierren los clasificatorios.
 
 ## Stack
 
@@ -51,14 +67,15 @@ app/
   icon.svg, manifest.ts, robots.ts, sitemap.ts, not-found.tsx
 components/
   sections/             Una sección de la landing por archivo
-  jornada-simulator.tsx Demo jugable (cliente)
+  round-simulator.tsx   Demo jugable: 5 Cashouts + 1 Final Round (cliente)
   hero-pick-card.tsx    Tarjeta animada del hero (cliente)
   site-header.tsx       Navegación fija + menú móvil (cliente)
-  ui/                   Botones, escudos, logo, animación de entrada
+  ui/                   Botones, etiquetas de equipo, logo, animación de entrada
 lib/
   game.ts               Lógica pura del simulador (reducer + RNG inyectado)
   teams.ts              Equipos de la demo (ratings orientativos, no son datos reales)
   content.ts            Preguntas frecuentes
+  format.ts             Formato de dinero y nombres de modos
   site.ts               Nombre, URLs y navegación
 ```
 
@@ -73,18 +90,17 @@ lib/
 
 ## Imágenes
 
-Las imágenes de `public/images/` (estadio, foco central y pistas) son ilustraciones generadas por
-código, no fotografías. Para usar fotos reales, sustituye los archivos manteniendo nombre y proporción:
+Las imágenes de `public/images/` son ilustraciones generadas por código (escenario de esports y podio), no
+fotografías ni capturas del juego. Para usar fotos propias, sustituye los archivos manteniendo nombre y
+proporción:
 
-| Archivo           | Dónde se usa              | Proporción |
-| ----------------- | ------------------------- | ---------- |
-| `hero-arena.jpg`  | Hero                      | 4:5        |
-| `spotlight.jpg`   | "Un único ganador"        | ~3:2       |
-| `sport-*.jpg`     | Competiciones y deportes  | 4:5        |
-| `final-arena.jpg` | CTA final e imagen social | 2:1        |
+| Archivo           | Dónde se usa                                   | Proporción |
+| ----------------- | ---------------------------------------------- | ---------- |
+| `hero-arena.jpg`  | Hero                                           | 4:5        |
+| `spotlight.jpg`   | "Un único ganador"                             | ~3:2       |
+| `final-arena.jpg` | The Grand Major 2026, CTA final, imagen social | 2:1        |
 
 ## Notas
 
-- La demo y el ticker de resultados usan datos de ejemplo; no son resultados reales.
-- Squid League no está afiliado a LaLiga, la Premier League ni a ningún club.
+- La demo, el ticker y la tarjeta del hero usan datos de ejemplo; no son resultados reales.
 - Archivo se distribuye bajo SIL Open Font License (`assets/fonts/OFL.txt`).

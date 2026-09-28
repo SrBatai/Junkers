@@ -1,10 +1,10 @@
 import { Reveal } from "@/components/ui/reveal";
 
 const lines = [
-  { lead: "Si eres fan del fútbol", rest: "y quieres algo más que una quiniela." },
-  { lead: "Si estás harto de juegos complicados", rest: "y buscas algo directo." },
+  { lead: "Si no te pierdes un Major de THE FINALS", rest: "y quieres jugarlo desde la grada." },
+  { lead: "Si crees que sabes quién gana un Cashout", rest: "y quieres demostrarlo." },
   { lead: "Si te gusta la estrategia", rest: "y la tensión de cada decisión." },
-  { lead: "Si quieres competir contra tus amigos", rest: "con partidos reales." },
+  { lead: "Si quieres competir contra tus amigos", rest: "con partidas reales." },
 ];
 
 export function Audience() {

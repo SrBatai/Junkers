@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
-export const alt = "Squid League: elige, sobrevive, vence";
+export const alt = "Last Squad: elige, sobrevive, vence";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -58,7 +58,7 @@ export default function Image() {
               clipPath: "polygon(0 0, 78% 0, 100% 22%, 100% 100%, 22% 100%, 0 78%)",
             }}
           />
-          Squid League
+          Last Squad
         </div>
         <div
           style={{
@@ -76,7 +76,7 @@ export default function Image() {
           <span style={{ color: "#ff2d6b" }}>Vence.</span>
         </div>
         <div style={{ display: "flex", fontFamily: "Body", fontSize: 30, color: "#a6a5ae", marginTop: 36 }}>
-          Si tu equipo no gana, quedas eliminado.
+          Para los esports de THE FINALS. Si tu equipo cae, caes con él.
         </div>
       </div>
     </div>,

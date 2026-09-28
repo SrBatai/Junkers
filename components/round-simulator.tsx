@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useRef } from "react";
+import { Fragment, useEffect, useReducer, useRef } from "react";
 import {
   AnimatePresence,
   animate,
@@ -18,22 +18,26 @@ import {
 } from "@phosphor-icons/react";
 import { buttonClass } from "@/components/ui/button";
 import { Crest } from "@/components/ui/crest";
+import { formatCash, modeLabel } from "@/lib/format";
 import {
   DEMO_ROUNDS,
-  type Fixture,
   type GameState,
-  type Score,
+  type Match,
+  type MatchResult,
   canRebuy,
   gameReducer,
   initialGame,
-  makeFixtures,
-  pickedFixture,
+  makeMatches,
+  modeForRound,
+  pickedMatch,
+  placementOf,
   playMatch,
   survivors,
 } from "@/lib/game";
-import { type LeagueId, type Team, leagues } from "@/lib/teams";
+import { type Team, teamById } from "@/lib/teams";
 
 const ease = [0.16, 1, 0.3, 1] as const;
+const letters = "ABCDEFGH";
 
 function Counter({ value }: { value: number }) {
   const reduce = useReducedMotion();
@@ -59,182 +63,226 @@ function Stat({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
-type TeamButtonProps = {
-  team: Team;
-  rival: Team;
-  home: boolean;
-  goals: number | null;
-  state: GameState;
-  onSelect: (id: string) => void;
-  delay: number;
-};
-
-function TeamButton({ team, rival, home, goals, state, onSelect, delay }: TeamButtonProps) {
-  const selected = state.pick === team.id;
-  const usedBefore = state.used.includes(team.id) && !(selected && state.phase === "result");
-  const locked = state.phase === "result" || usedBefore;
-
+function RoundTrack({ round }: { round: number }) {
   return (
-    <button
-      type="button"
-      disabled={locked}
-      aria-pressed={selected}
-      aria-label={
-        usedBefore
-          ? `${team.name}, ya usado`
-          : `Elegir ${team.name} (${home ? "local" : "visitante"}) contra ${rival.name}`
-      }
-      onClick={() => onSelect(team.id)}
-      className={`flex w-full items-center gap-3 px-2.5 py-2 text-left transition-colors duration-200 [--cut:8px] chamfer ${
-        selected
-          ? "bg-pink text-ink"
-          : usedBefore
-            ? "cursor-not-allowed text-dim"
-            : state.phase === "pick"
-              ? "text-chalk hover:bg-white/[0.07]"
-              : "text-chalk"
-      }`}
-    >
-      <Crest team={team} size="sm" className={usedBefore ? "opacity-40" : ""} />
-      <span
-        className={`min-w-0 flex-1 truncate text-[15px] font-semibold ${usedBefore ? "line-through" : ""}`}
-      >
-        {team.name}
-      </span>
-      {usedBefore && <LockSimpleIcon weight="bold" className="size-4 shrink-0" aria-hidden />}
-      {goals !== null && (
-        <motion.span
-          className="font-mono text-lg font-semibold tabular-nums"
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay, duration: 0.35, ease }}
-        >
-          {goals}
-        </motion.span>
-      )}
-    </button>
+    <div>
+      <ol className="flex gap-1.5" aria-label={`Ronda ${round} de ${DEMO_ROUNDS}`}>
+        {Array.from({ length: DEMO_ROUNDS }, (_, i) => i + 1).map((r) => (
+          <li
+            key={r}
+            className={`h-2.5 w-8 [--cut:3px] chamfer sm:w-10 ${
+              r < round ? "bg-chalk/70" : r === round ? "bg-pink" : "bg-ink-4"
+            }`}
+          />
+        ))}
+      </ol>
+      <p className="mt-3 text-sm text-mute">
+        <span className="font-semibold text-chalk">
+          Ronda {round}: {modeLabel[modeForRound(round)]}.
+        </span>{" "}
+        {modeForRound(round) === "cashout"
+          ? "Cuatro equipos por partida, pasan los dos primeros."
+          : "Cara a cara: solo vale ganar."}
+      </p>
+    </div>
   );
 }
 
-function FixtureCard({
-  fixture,
-  score,
+type RowProps = {
+  team: Team;
+  others: Team[];
+  mode: Match["mode"];
+  state: GameState;
+  place: number | null;
+  value: string | null;
+  onSelect: (id: string) => void;
+};
+
+function TeamRow({ team, others, mode, state, place, value, onSelect }: RowProps) {
+  const selected = state.pick === team.id;
+  const usedBefore = state.used.includes(team.id) && !(selected && state.phase === "result");
+  const locked = state.phase === "result" || usedBefore;
+  const out = place !== null && (mode === "cashout" ? place > 1 : place > 0);
+
+  return (
+    <motion.li layout transition={{ duration: 0.5, ease }}>
+      <button
+        type="button"
+        disabled={locked}
+        aria-pressed={selected}
+        aria-label={
+          usedBefore
+            ? `${team.name}, ya usado`
+            : `Elegir ${team.name} (${modeLabel[mode]} contra ${others.map((o) => o.name).join(", ")})`
+        }
+        onClick={() => onSelect(team.id)}
+        className={`flex w-full items-center gap-3 px-2.5 py-2 text-left transition-colors duration-200 [--cut:8px] chamfer ${
+          selected
+            ? "bg-pink text-ink"
+            : usedBefore
+              ? "cursor-not-allowed text-dim"
+              : state.phase === "pick"
+                ? "text-chalk hover:bg-white/[0.07]"
+                : out
+                  ? "text-mute"
+                  : "text-chalk"
+        }`}
+      >
+        {place !== null && mode === "cashout" && (
+          <span className={`w-5 font-mono text-xs ${selected ? "text-ink/70" : "text-dim"}`}>
+            {place + 1}º
+          </span>
+        )}
+        <Crest team={team} size="sm" className={usedBefore ? "opacity-40" : ""} />
+        <span
+          className={`min-w-0 flex-1 truncate text-[15px] font-semibold ${usedBefore ? "line-through" : ""}`}
+        >
+          {team.name}
+        </span>
+        {usedBefore && <LockSimpleIcon weight="bold" className="size-4 shrink-0" aria-hidden />}
+        {value !== null && (
+          <motion.span
+            className="font-mono text-sm font-semibold tabular-nums"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35, duration: 0.3 }}
+          >
+            {value}
+          </motion.span>
+        )}
+      </button>
+    </motion.li>
+  );
+}
+
+function MatchCard({
+  match,
+  result,
   index,
   state,
   onSelect,
 }: {
-  fixture: Fixture;
-  score: Score | null;
+  match: Match;
+  result: MatchResult | null;
   index: number;
   state: GameState;
   onSelect: (id: string) => void;
 }) {
-  const mine = state.pick === fixture.home.id || state.pick === fixture.away.id;
+  const mine = match.teams.some((t) => t.id === state.pick);
+  const rows = result ? result.order : match.teams;
+
   return (
     <li
-      className={`p-1.5 transition-colors [--cut:12px] chamfer ${
-        mine && state.phase === "result" ? "bg-ink-4" : "bg-ink-3"
-      }`}
+      className={`p-1.5 transition-colors [--cut:12px] chamfer ${mine && state.phase === "result" ? "bg-ink-4" : "bg-ink-3"}`}
     >
-      <TeamButton
-        team={fixture.home}
-        rival={fixture.away}
-        home
-        goals={score?.home ?? null}
-        state={state}
-        onSelect={onSelect}
-        delay={index * 0.06}
-      />
-      <TeamButton
-        team={fixture.away}
-        rival={fixture.home}
-        home={false}
-        goals={score?.away ?? null}
-        state={state}
-        onSelect={onSelect}
-        delay={index * 0.06 + 0.03}
-      />
+      <p className="px-2.5 pt-1.5 pb-1 font-mono text-[11px] text-dim">
+        {modeLabel[match.mode]} {letters[index]}
+      </p>
+      <ul>
+        {rows.map((team, i) => {
+          const value = result
+            ? result.mode === "cashout"
+              ? formatCash(result.cash[i])
+              : String(i === 0 ? result.score[0] : result.score[1])
+            : null;
+          return (
+            <Fragment key={team.id}>
+              <TeamRow
+                team={team}
+                others={match.teams.filter((t) => t.id !== team.id)}
+                mode={match.mode}
+                state={state}
+                place={result ? i : null}
+                value={value}
+                onSelect={onSelect}
+              />
+              {result?.mode === "cashout" && i === 1 && (
+                <motion.li
+                  aria-hidden
+                  className="mx-2.5 my-1 border-t border-dashed border-pink/60"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                />
+              )}
+            </Fragment>
+          );
+        })}
+      </ul>
     </li>
   );
 }
 
-function resultCopy(state: GameState) {
-  const match = pickedFixture(state);
-  if (!match || !state.scores || !state.pick) return null;
-  const { fixture, index } = match;
-  const s = state.scores[index];
-  const team = fixture.home.id === state.pick ? fixture.home : fixture.away;
-  const line = `${fixture.home.name} ${s.home}-${s.away} ${fixture.away.name}.`;
+function describe(state: GameState) {
+  const picked = pickedMatch(state);
+  if (!picked || !state.results || !state.pick) return null;
+  const result = state.results[picked.index];
+  const team = teamById[state.pick];
+  const place = placementOf(team.id, result);
+
+  let line: string;
+  if (result.mode === "cashout") {
+    line = `${team.name} acaba ${place + 1}º de 4 con ${formatCash(result.cash[place])}.`;
+  } else {
+    const rival = result.order.find((t) => t.id !== team.id)!;
+    const [w, l] = result.score;
+    line =
+      place === 0
+        ? `${team.name} gana ${w}-${l} a ${rival.name}.`
+        : `${team.name} cae ${l}-${w} ante ${rival.name}.`;
+  }
+
   const rivals = state.rivals;
   const left = rivals === 1 ? "Queda 1 rival en pie." : `Quedan ${rivals} rivales en pie.`;
   const fellToo =
     state.rivalsBefore === 1
-      ? "y tu último rival también cayó"
-      : `y tus ${state.rivalsBefore} rivales también cayeron`;
+      ? "Tu último rival también ha caído"
+      : `Tus ${state.rivalsBefore} rivales también han caído`;
 
   switch (state.ending) {
     case "solo":
       return {
         stamp: "Único ganador",
-        tone: "win",
+        win: true,
         text: `${line} Todos tus rivales han caído: te llevas el bote entero.`,
       };
     case "split":
       return {
         stamp: "Reparto del bote",
-        tone: "win",
+        win: true,
         text: `${line} Llegas vivo al final junto a ${rivals} ${rivals === 1 ? "rival" : "rivales"}. El bote se reparte entre ${rivals + 1}.`,
       };
     case "wipeout":
-      return {
-        stamp: "Todos eliminados",
-        tone: "out",
-        text: `${line} ${team.name} no ganó ${fellToo}. Esta liga se queda sin ganador.`,
-      };
+      return { stamp: "Todos eliminados", win: false, text: `${line} ${fellToo}. Nadie se lleva el bote.` };
     case "out":
       return {
         stamp: "Eliminado",
-        tone: "out",
-        text: `${line} ${state.outcome === "draw" ? "El empate cuenta como derrota." : `${team.name} perdió.`} ${left}`,
+        win: false,
+        text: `${line} ${result.mode === "cashout" ? "Solo pasan los dos primeros. " : ""}${left}`,
       };
     default:
-      return {
-        stamp: "Sobrevives",
-        tone: "win",
-        text: `${line} ${team.name} gana y sigues en la liga. ${left}`,
-      };
+      return { stamp: "Sobrevives", win: true, text: `${line} Sigues vivo. ${left}` };
   }
 }
 
-export function JornadaSimulator() {
-  const [state, dispatch] = useReducer(gameReducer, "laliga" as LeagueId, (id) => initialGame(id));
+export function RoundSimulator() {
+  const [state, dispatch] = useReducer(gameReducer, undefined, () => initialGame());
   const reduce = useReducedMotion();
   const panelRef = useRef<HTMLDivElement>(null);
-  const match = pickedFixture(state);
-  const pickTeam = match
-    ? match.fixture.home.id === state.pick
-      ? match.fixture.home
-      : match.fixture.away
-    : null;
-  const pickRival =
-    match && pickTeam
-      ? match.fixture.home.id === pickTeam.id
-        ? match.fixture.away
-        : match.fixture.home
-      : null;
-  const copy = state.phase === "result" ? resultCopy(state) : null;
-  const alive = state.rivals + (state.phase === "result" && state.outcome !== "win" ? 0 : 1);
-
-  const freshFixtures = (leagueId: LeagueId = state.leagueId) =>
-    makeFixtures(leagues[leagueId].teams, Math.random);
+  const picked = pickedMatch(state);
+  const pickTeam = state.pick ? teamById[state.pick] : null;
+  const opponents = picked && pickTeam ? picked.match.teams.filter((t) => t.id !== pickTeam.id) : [];
+  const copy = state.phase === "result" ? describe(state) : null;
+  const alive = state.rivals + (state.phase === "result" && !state.survived ? 0 : 1);
+  const mode = modeForRound(state.round);
 
   const select = (id: string) => dispatch({ type: "select", teamId: id });
 
   const confirm = () => {
     dispatch({
       type: "resolve",
-      scores: state.fixtures.map((f) => playMatch(f, Math.random)),
-      rivals: survivors(state.rivals, Math.random),
+      results: state.matches.map((m) => playMatch(m, Math.random)),
+      rivals: survivors(state.rivals, mode, Math.random),
     });
     if (window.matchMedia("(max-width: 1023px)").matches) {
       requestAnimationFrame(() =>
@@ -243,37 +291,13 @@ export function JornadaSimulator() {
     }
   };
 
-  const reset = (leagueId: LeagueId = state.leagueId) =>
-    dispatch({ type: "reset", leagueId, fixtures: freshFixtures(leagueId) });
+  const nextMatches = () => makeMatches(state.round + 1, Math.random);
 
   return (
     <div className="bg-ink-2 p-3 [--cut:28px] chamfer sm:p-6 lg:p-8">
-      {/* Top bar */}
       <div className="flex flex-col gap-6 px-1 pt-1 sm:px-0 sm:pt-0 md:flex-row md:items-end md:justify-between">
-        <div
-          role="group"
-          aria-label="Competición"
-          className="inline-flex self-start bg-ink-3 p-1 [--cut:10px] chamfer"
-        >
-          {(Object.keys(leagues) as LeagueId[]).map((id) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={state.leagueId === id}
-              onClick={() => state.leagueId !== id && reset(id)}
-              className={`px-4 py-2 text-sm font-semibold transition-colors [--cut:7px] chamfer ${
-                state.leagueId === id ? "bg-chalk text-ink" : "text-mute hover:text-chalk"
-              }`}
-            >
-              {leagues[id].name}
-            </button>
-          ))}
-        </div>
-        <dl className="grid grid-cols-3 gap-6 sm:gap-10">
-          <Stat label="Jornada">
-            {state.round}
-            <span className="text-mute">/{DEMO_ROUNDS}</span>
-          </Stat>
+        <RoundTrack round={state.round} />
+        <dl className="grid grid-cols-2 gap-8 sm:gap-10">
           <Stat label="En pie">
             <Counter value={alive} />
           </Stat>
@@ -282,17 +306,16 @@ export function JornadaSimulator() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
-        {/* Fixtures */}
         <div className="lg:col-span-8">
           <ul
             className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-            aria-label={`Partidos de la jornada ${state.round}`}
+            aria-label={`Partidas de la ronda ${state.round}`}
           >
-            {state.fixtures.map((f, i) => (
-              <FixtureCard
-                key={`${state.round}-${f.home.id}`}
-                fixture={f}
-                score={state.scores?.[i] ?? null}
+            {state.matches.map((m, i) => (
+              <MatchCard
+                key={`${state.round}-${m.teams[0].id}`}
+                match={m}
+                result={state.results?.[i] ?? null}
                 index={i}
                 state={state}
                 onSelect={select}
@@ -300,7 +323,6 @@ export function JornadaSimulator() {
             ))}
           </ul>
 
-          {/* Mobile quick confirm */}
           <AnimatePresence>
             {state.phase === "pick" && pickTeam && (
               <motion.div
@@ -311,7 +333,7 @@ export function JornadaSimulator() {
                 transition={{ duration: 0.25 }}
               >
                 <div className="flex items-center gap-3 bg-ink-4 p-2 pl-3 shadow-[0_20px_50px_-10px_rgb(0_0_0/0.9)] [--cut:12px] chamfer">
-                  <Crest team={pickTeam} size="sm" />
+                  <Crest team={pickTeam} size="sm" picked />
                   <span className="min-w-0 flex-1 truncate font-semibold">{pickTeam.name}</span>
                   <button type="button" onClick={confirm} className={buttonClass("primary", "sm")}>
                     Confirmar
@@ -322,7 +344,6 @@ export function JornadaSimulator() {
           </AnimatePresence>
         </div>
 
-        {/* Panel */}
         <div ref={panelRef} className="lg:col-span-4">
           <div
             className="flex min-h-[20rem] flex-col bg-ink-3 p-5 [--cut:16px] chamfer sm:p-6 lg:sticky lg:top-24"
@@ -345,13 +366,15 @@ export function JornadaSimulator() {
                     Elige tu equipo
                   </p>
                   <p className="mt-3 leading-relaxed text-mute">
-                    Toca cualquier equipo de la jornada {state.round}. Si gana, sigues. Si empata o pierde,
-                    estás fuera.
+                    Toca cualquier equipo de la ronda {state.round}.{" "}
+                    {mode === "cashout"
+                      ? "Si acaba entre los dos primeros de su Cashout, sigues."
+                      : "Si gana su Final Round, sigues."}
                   </p>
                 </motion.div>
               )}
 
-              {state.phase === "pick" && pickTeam && pickRival && (
+              {state.phase === "pick" && pickTeam && (
                 <motion.div
                   key={`pick-${pickTeam.id}`}
                   className="flex flex-1 flex-col"
@@ -360,20 +383,20 @@ export function JornadaSimulator() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.25, ease }}
                 >
-                  <p className="text-sm text-mute">Tu elección para la jornada {state.round}</p>
+                  <p className="text-sm text-mute">Tu elección para la ronda {state.round}</p>
                   <div className="mt-5 flex items-center gap-4">
-                    <Crest team={pickTeam} size="lg" />
+                    <Crest team={pickTeam} size="lg" picked />
                     <div className="min-w-0">
                       <p className="truncate text-3xl leading-none font-extrabold uppercase [font-stretch:70%]">
                         {pickTeam.name}
                       </p>
                       <p className="mt-1.5 text-sm text-mute">
-                        {match?.fixture.home.id === pickTeam.id ? "En casa" : "Fuera"} contra {pickRival.name}
+                        {modeLabel[mode]} contra {opponents.map((o) => o.name).join(", ")}
                       </p>
                     </div>
                   </div>
                   <p className="mt-6 text-sm leading-relaxed text-mute">
-                    Al confirmar, {pickTeam.name} queda bloqueado para el resto de la liga.
+                    Al confirmar, {pickTeam.name} queda bloqueado para el resto del torneo.
                   </p>
                   <button
                     type="button"
@@ -396,12 +419,12 @@ export function JornadaSimulator() {
                 >
                   <motion.p
                     className={`self-start px-4 py-2 text-3xl leading-none font-black uppercase [font-stretch:62.5%] [--cut:10px] chamfer ${
-                      copy.tone === "win" ? "bg-chalk text-ink" : "bg-pink text-ink"
+                      copy.win ? "bg-chalk text-ink" : "bg-pink text-ink"
                     }`}
                     initial={{ opacity: 0, scale: 1.8, rotate: -10 }}
                     animate={{ opacity: 1, scale: 1, rotate: -3 }}
                     transition={
-                      reduce ? { duration: 0 } : { delay: 0.45, type: "spring", stiffness: 360, damping: 17 }
+                      reduce ? { duration: 0 } : { delay: 0.55, type: "spring", stiffness: 360, damping: 17 }
                     }
                   >
                     {copy.stamp}
@@ -412,17 +435,17 @@ export function JornadaSimulator() {
                     {state.ending === null && (
                       <button
                         type="button"
-                        onClick={() => dispatch({ type: "next", fixtures: freshFixtures() })}
+                        onClick={() => dispatch({ type: "next", matches: nextMatches() })}
                         className={buttonClass("primary", "md", "w-full")}
                       >
-                        Siguiente jornada
+                        Siguiente ronda
                         <ArrowRightIcon weight="bold" className="size-[18px]" aria-hidden />
                       </button>
                     )}
                     {canRebuy(state) && (
                       <button
                         type="button"
-                        onClick={() => dispatch({ type: "rebuy", fixtures: freshFixtures() })}
+                        onClick={() => dispatch({ type: "rebuy", matches: nextMatches() })}
                         className={buttonClass("primary", "md", "w-full")}
                       >
                         <ArrowCounterClockwiseIcon weight="bold" className="size-[18px]" aria-hidden />
@@ -432,11 +455,11 @@ export function JornadaSimulator() {
                     {state.ending !== null && (
                       <button
                         type="button"
-                        onClick={() => reset()}
+                        onClick={() => dispatch({ type: "reset", matches: makeMatches(1, Math.random) })}
                         className={buttonClass("secondary", "md", "w-full")}
                       >
                         <ArrowClockwiseIcon weight="bold" className="size-[18px]" aria-hidden />
-                        {state.ending === "out" ? "Empezar de nuevo" : "Jugar otra liga"}
+                        {state.ending === "out" ? "Empezar de nuevo" : "Jugar otro torneo"}
                       </button>
                     )}
                     {canRebuy(state) && (

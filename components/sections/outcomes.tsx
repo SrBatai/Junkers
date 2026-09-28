@@ -11,7 +11,7 @@ export function Outcomes() {
           Tres finales <span className="text-pink">posibles</span>
         </h2>
         <p className="mt-6 max-w-[34rem] text-lg leading-relaxed text-mute">
-          Tú eliges. Las decisiones de todos los jugadores dan forma a cada liga.
+          Tú eliges. Las decisiones de todos los jugadores dan forma a cada torneo.
         </p>
       </Reveal>
 
@@ -20,7 +20,7 @@ export function Outcomes() {
           <div className="relative h-full min-h-[26rem] lg:min-h-[36rem]">
             <Image
               src={spotlight}
-              alt="Un único foco ilumina el círculo central del campo"
+              alt="Un podio a oscuras donde un único foco ilumina el primer puesto"
               fill
               placeholder="blur"
               sizes="(min-width: 1024px) 58vw, 100vw"
@@ -69,7 +69,7 @@ export function Outcomes() {
           <div className="relative">
             <h3 className="text-4xl display sm:text-5xl">Todos eliminados</h3>
             <p className="mt-3 max-w-[26rem] leading-relaxed text-chalk/75">
-              Una jornada imposible puede tumbar a todos a la vez. Entonces la liga no tiene ganador.
+              Una ronda imposible puede tumbar a todos a la vez. Entonces nadie se lleva el bote.
             </p>
           </div>
         </Reveal>

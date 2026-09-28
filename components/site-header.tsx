@@ -37,7 +37,7 @@ export function SiteHeader() {
         }`}
       >
         <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-6 px-4 sm:px-6 lg:px-10">
-          <a href="#top" aria-label="Squid League, inicio" onClick={() => setOpen(false)}>
+          <a href="#top" aria-label="Last Squad, inicio" onClick={() => setOpen(false)}>
             <Logo />
           </a>
 

@@ -1,6 +1,7 @@
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Audience } from "@/components/sections/audience";
+import { Competitions } from "@/components/sections/competitions";
 import { Faq } from "@/components/sections/faq";
 import { Features } from "@/components/sections/features";
 import { FinalCta } from "@/components/sections/final-cta";
@@ -10,7 +11,6 @@ import { Outcomes } from "@/components/sections/outcomes";
 import { ResultsTicker } from "@/components/sections/results-ticker";
 import { Rewards } from "@/components/sections/rewards";
 import { Simulator } from "@/components/sections/simulator";
-import { Sports } from "@/components/sections/sports";
 import { faqs } from "@/lib/content";
 import { site } from "@/lib/site";
 
@@ -50,7 +50,7 @@ export default function Home() {
         <Simulator />
         <Outcomes />
         <Features />
-        <Sports />
+        <Competitions />
         <Rewards />
         <Audience />
         <Faq />

@@ -1,4 +1,4 @@
-import { JornadaSimulator } from "@/components/jornada-simulator";
+import { RoundSimulator } from "@/components/round-simulator";
 import { Reveal } from "@/components/ui/reveal";
 
 export function Simulator() {
@@ -8,14 +8,19 @@ export function Simulator() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
         <Reveal className="max-w-3xl">
           <p className="font-mono text-xs tracking-[0.2em] text-pink uppercase">Demo interactiva</p>
-          <h2 className="mt-5 text-5xl display sm:text-7xl lg:text-[5.5rem]">Prueba una liga</h2>
-          <p className="mt-6 max-w-[36rem] text-lg leading-relaxed text-mute">
-            Seis jornadas contra 23 rivales. Elige, confirma y descubre cuánto aguantas.
+          <h2 className="mt-5 text-5xl display sm:text-7xl lg:text-[5.5rem]">Prueba un torneo</h2>
+          <p className="mt-6 max-w-[38rem] text-lg leading-relaxed text-mute">
+            Seis rondas contra 23 rivales: cinco Cashouts y una Final Round. Elige, confirma y descubre cuánto
+            aguantas.
           </p>
         </Reveal>
         <Reveal className="mt-12" delay={0.1}>
-          <JornadaSimulator />
+          <RoundSimulator />
         </Reveal>
+        <p className="mt-4 text-sm text-dim">
+          Resultados simulados con equipos que han competido en el circuito de THE FINALS. No es la lista
+          oficial de ningún torneo.
+        </p>
       </div>
     </section>
   );

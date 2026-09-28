@@ -1,19 +1,26 @@
-import type { LeagueId, Team } from "./teams";
-import { leagues } from "./teams";
+import type { Team } from "./teams";
+import { teams } from "./teams";
 
 /**
  * Pure logic for the landing-page demo. Randomness is always injected so the
  * first render is deterministic (SSR and hydration match) and the reducer
  * stays pure.
+ *
+ * Demo format: rounds 1-5 are Cashouts (4 teams, the top 2 survive) and the
+ * last round is a Final Round (head to head, only the winner survives).
  */
 
 export const DEMO_ROUNDS = 6;
 export const DEMO_RIVALS = 23;
-/** Chance that each rival still alive is knocked out in a given round. */
-const RIVAL_KNOCKOUT_RATE = 0.3;
-const HOME_ADVANTAGE = 4;
+const CASHOUT_SIZE = 4;
+const CASHOUT_SURVIVORS = 2;
+/** Chance that each rival still alive survives a round. */
+const RIVAL_SURVIVAL = { cashout: 0.66, final: 0.55 } as const;
+/** Lower = favourites win more often. */
+const TEMPERATURE = 11;
 
 export type Rand = () => number;
+export type Mode = "cashout" | "final";
 
 export function seeded(seed: number): Rand {
   let a = seed >>> 0;
@@ -26,70 +33,99 @@ export function seeded(seed: number): Rand {
   };
 }
 
-export type Fixture = { home: Team; away: Team };
-export type Score = { home: number; away: number };
-export type Outcome = "win" | "draw" | "loss";
+export type Match = { mode: Mode; teams: Team[] };
+
+export type MatchResult =
+  /** `order` is the final ranking; `cash` is aligned with it. */
+  | { mode: "cashout"; order: Team[]; cash: number[] }
+  /** `order[0]` won; `score` is [winner, loser] in a best of three. */
+  | { mode: "final"; order: Team[]; score: [number, number] };
+
 export type Ending = "solo" | "split" | "wipeout" | "out";
 
-export function makeFixtures(teams: Team[], rand: Rand): Fixture[] {
-  const pool = [...teams];
+export function modeForRound(round: number): Mode {
+  return round >= DEMO_ROUNDS ? "final" : "cashout";
+}
+
+function shuffle<T>(items: T[], rand: Rand) {
+  const pool = [...items];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  const fixtures: Fixture[] = [];
-  for (let i = 0; i + 1 < pool.length; i += 2) {
-    fixtures.push({ home: pool[i], away: pool[i + 1] });
+  return pool;
+}
+
+export function makeMatches(round: number, rand: Rand): Match[] {
+  const mode = modeForRound(round);
+  const size = mode === "cashout" ? CASHOUT_SIZE : 2;
+  const pool = shuffle(teams, rand);
+  const matches: Match[] = [];
+  for (let i = 0; i + size <= pool.length; i += size) {
+    matches.push({ mode, teams: pool.slice(i, i + size) });
   }
-  return fixtures;
+  return matches;
 }
 
-function goals(rand: Rand, min: number, max: number) {
-  return min + Math.floor(rand() * (max - min + 1));
-}
+const weight = (team: Team) => Math.exp(team.rating / TEMPERATURE);
 
-export function playMatch({ home, away }: Fixture, rand: Rand): Score {
-  const diff = (home.rating + HOME_ADVANTAGE - away.rating) / 100;
-  const pDraw = Math.min(0.3, Math.max(0.14, 0.27 - Math.abs(diff) * 0.5));
-  const pHome = Math.min(0.8, Math.max(0.08, 0.4 + diff * 1.4));
-  const roll = rand();
-
-  if (roll < pHome) {
-    const w = goals(rand, 1, 4);
-    return { home: w, away: goals(rand, 0, w - 1) };
+/** Plackett-Luce draw: pick 1st by strength, then 2nd from the rest, and so on. */
+function rank(field: Team[], rand: Rand) {
+  const left = [...field];
+  const order: Team[] = [];
+  while (left.length) {
+    const total = left.reduce((sum, t) => sum + weight(t), 0);
+    let roll = rand() * total;
+    let index = 0;
+    for (; index < left.length - 1; index++) {
+      roll -= weight(left[index]);
+      if (roll <= 0) break;
+    }
+    order.push(left.splice(index, 1)[0]);
   }
-  if (roll < pHome + pDraw) {
-    const g = goals(rand, 0, 2);
-    return { home: g, away: g };
+  return order;
+}
+
+const roundTo = (value: number, step: number) => Math.round(value / step) * step;
+
+export function playMatch(match: Match, rand: Rand): MatchResult {
+  const order = rank(match.teams, rand);
+  if (match.mode === "final") {
+    return { mode: "final", order, score: [2, rand() < 0.5 ? 0 : 1] };
   }
-  const w = goals(rand, 1, 3);
-  return { home: goals(rand, 0, w - 1), away: w };
+  let cash = roundTo(18000 + rand() * 14000, 50);
+  const amounts = order.map((_, i) => {
+    if (i > 0) cash = roundTo(cash * (0.55 + rand() * 0.3), 50);
+    return cash;
+  });
+  return { mode: "cashout", order, cash: amounts };
 }
 
-export function outcomeFor(teamId: string, fixture: Fixture, score: Score): Outcome {
-  if (score.home === score.away) return "draw";
-  const isHome = fixture.home.id === teamId;
-  const won = isHome ? score.home > score.away : score.away > score.home;
-  return won ? "win" : "loss";
+export function placementOf(teamId: string, result: MatchResult) {
+  return result.order.findIndex((t) => t.id === teamId);
 }
 
-export function survivors(alive: number, rand: Rand) {
+export function survives(teamId: string, result: MatchResult) {
+  const place = placementOf(teamId, result);
+  return result.mode === "cashout" ? place < CASHOUT_SURVIVORS : place === 0;
+}
+
+export function survivors(alive: number, mode: Mode, rand: Rand) {
   let left = 0;
-  for (let i = 0; i < alive; i++) if (rand() >= RIVAL_KNOCKOUT_RATE) left++;
+  for (let i = 0; i < alive; i++) if (rand() < RIVAL_SURVIVAL[mode]) left++;
   return left;
 }
 
 /* ------------------------------------------------------------------ state */
 
 export type GameState = {
-  leagueId: LeagueId;
   round: number;
-  fixtures: Fixture[];
-  scores: Score[] | null;
+  matches: Match[];
+  results: MatchResult[] | null;
   used: string[];
   pick: string | null;
   phase: "pick" | "result";
-  outcome: Outcome | null;
+  survived: boolean | null;
   rivalsBefore: number;
   rivals: number;
   rebuyUsed: boolean;
@@ -98,21 +134,20 @@ export type GameState = {
 
 export type GameAction =
   | { type: "select"; teamId: string }
-  | { type: "resolve"; scores: Score[]; rivals: number }
-  | { type: "next"; fixtures: Fixture[] }
-  | { type: "rebuy"; fixtures: Fixture[] }
-  | { type: "reset"; leagueId: LeagueId; fixtures: Fixture[] };
+  | { type: "resolve"; results: MatchResult[]; rivals: number }
+  | { type: "next"; matches: Match[] }
+  | { type: "rebuy"; matches: Match[] }
+  | { type: "reset"; matches: Match[] };
 
-export function initialGame(leagueId: LeagueId, fixtures?: Fixture[]): GameState {
+export function initialGame(matches?: Match[]): GameState {
   return {
-    leagueId,
     round: 1,
-    fixtures: fixtures ?? makeFixtures(leagues[leagueId].teams, seeded(2026)),
-    scores: null,
+    matches: matches ?? makeMatches(1, seeded(2026)),
+    results: null,
     used: [],
     pick: null,
     phase: "pick",
-    outcome: null,
+    survived: null,
     rivalsBefore: DEMO_RIVALS,
     rivals: DEMO_RIVALS,
     rebuyUsed: false,
@@ -120,18 +155,18 @@ export function initialGame(leagueId: LeagueId, fixtures?: Fixture[]): GameState
   };
 }
 
-export function pickedFixture(state: GameState) {
+export function pickedMatch(state: GameState) {
   if (!state.pick) return null;
-  const index = state.fixtures.findIndex((f) => f.home.id === state.pick || f.away.id === state.pick);
-  return index === -1 ? null : { index, fixture: state.fixtures[index] };
+  const index = state.matches.findIndex((m) => m.teams.some((t) => t.id === state.pick));
+  return index === -1 ? null : { index, match: state.matches[index] };
 }
 
 export function canRebuy(state: GameState) {
   return state.ending === "out" && !state.rebuyUsed && state.round < DEMO_ROUNDS;
 }
 
-function endingFor(state: GameState, outcome: Outcome, rivals: number): Ending | null {
-  if (outcome === "win") {
+function endingFor(state: GameState, survived: boolean, rivals: number): Ending | null {
+  if (survived) {
     if (rivals === 0) return "solo";
     if (state.round >= DEMO_ROUNDS) return "split";
     return null;
@@ -146,39 +181,40 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, pick: state.pick === action.teamId ? null : action.teamId };
     }
     case "resolve": {
-      const match = pickedFixture(state);
-      if (state.phase !== "pick" || !match || !state.pick) return state;
-      const outcome = outcomeFor(state.pick, match.fixture, action.scores[match.index]);
+      const picked = pickedMatch(state);
+      if (state.phase !== "pick" || !picked || !state.pick) return state;
+      const survived = survives(state.pick, action.results[picked.index]);
       return {
         ...state,
         phase: "result",
-        scores: action.scores,
+        results: action.results,
         used: [...state.used, state.pick],
-        outcome,
+        survived,
         rivalsBefore: state.rivals,
         rivals: action.rivals,
-        ending: endingFor(state, outcome, action.rivals),
+        ending: endingFor(state, survived, action.rivals),
       };
     }
     case "next":
     case "rebuy": {
       if (state.phase !== "result") return state;
-      if (action.type === "next" && state.outcome !== "win") return state;
+      if (action.type === "next" && !state.survived) return state;
       if (action.type === "rebuy" && !canRebuy(state)) return state;
+      if (state.ending !== null && action.type === "next") return state;
       return {
         ...state,
         round: state.round + 1,
-        fixtures: action.fixtures,
-        scores: null,
+        matches: action.matches,
+        results: null,
         pick: null,
         phase: "pick",
-        outcome: null,
+        survived: null,
         rivalsBefore: state.rivals,
         ending: null,
         rebuyUsed: state.rebuyUsed || action.type === "rebuy",
       };
     }
     case "reset":
-      return initialGame(action.leagueId, action.fixtures);
+      return initialGame(action.matches);
   }
 }

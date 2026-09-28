@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 /*
- * Squid League design tokens.
- * Theme: dark only (the brand is a night arena). One accent: pink.
+ * Last Squad design tokens.
+ * Theme: dark only (the brand is an esports arena at night). One accent: pink.
  * Shape rule: no border radius anywhere. Elevated or interactive surfaces get
  * a chamfer on the top-right and bottom-left corners (`chamfer` utility).
  * Z-index scale: header 40, mobile menu 50, grain overlay 60.

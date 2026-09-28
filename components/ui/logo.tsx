@@ -5,10 +5,10 @@ export function Logo({ className = "" }: { className?: string }) {
         aria-hidden
         className="grid h-8 w-8 place-items-center bg-pink text-[17px] leading-none font-black text-ink [font-stretch:62.5%] [--cut:7px] chamfer"
       >
-        SL
+        LS
       </span>
       <span className="text-[22px] display leading-none tracking-[0.01em]">
-        Squid<span className="text-pink">League</span>
+        Last<span className="text-pink">Squad</span>
       </span>
     </span>
   );

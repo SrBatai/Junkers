@@ -16,13 +16,10 @@ export function Hero() {
         aria-hidden
         className="absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_78%_40%,rgb(255_45_107/0.14),transparent_70%)]"
       />
-      <div className="mx-auto grid min-h-[calc(100dvh-4rem)] max-w-[1400px] grid-cols-1 items-center gap-14 px-4 pt-8 pb-20 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:pt-10 lg:pb-16">
+      <div className="mx-auto grid min-h-[calc(100dvh-4rem)] max-w-[1400px] grid-cols-1 items-center gap-14 px-4 pt-8 pb-24 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:pt-10 lg:pb-16">
         <div className="lg:col-span-7">
-          <p
-            className="animate-rise font-mono text-xs tracking-[0.2em] text-mute uppercase"
-            style={{ animationDelay: "0ms" }}
-          >
-            Modo Liga · LaLiga y Premier League
+          <p className="animate-rise font-mono text-xs tracking-[0.2em] text-mute uppercase">
+            Para los esports de THE FINALS
           </p>
 
           <h1 className="mt-6 text-[clamp(3.75rem,15vw,5rem)] display sm:text-[5.5rem] lg:text-[6.25rem] xl:text-[7.25rem]">
@@ -41,8 +38,7 @@ export function Hero() {
             className="mt-7 max-w-[34rem] animate-rise text-lg leading-relaxed text-mute sm:text-xl"
             style={{ animationDelay: "480ms" }}
           >
-            Cada jornada eliges un equipo. Si no gana, quedas eliminado. Sé el último en pie y llévate todo el
-            bote.
+            Cada ronda, un equipo de THE FINALS. Si cae, caes con él. El último en pie se lleva el bote.
           </p>
 
           <div
@@ -60,7 +56,7 @@ export function Hero() {
           <div className="relative aspect-[4/5] overflow-hidden bg-ink-3 [--cut:28px] chamfer sm:aspect-[5/5] lg:aspect-[4/5]">
             <Image
               src={heroArena}
-              alt="Estadio de noche con los focos encendidos sobre el césped y los carteles LED en rosa"
+              alt="Escenario de esports con una pantalla LED gigante y el público en primer plano"
               fill
               preload
               placeholder="blur"
@@ -72,7 +68,7 @@ export function Hero() {
               className="absolute inset-0 bg-gradient-to-t from-ink via-ink/10 to-transparent"
             />
           </div>
-          <HeroPickCard className="absolute -bottom-10 left-4 w-[min(22rem,calc(100%-2rem))] sm:left-6 lg:-left-14" />
+          <HeroPickCard className="absolute -bottom-16 left-4 w-[min(23rem,calc(100%-2rem))] sm:left-6 lg:-left-14" />
         </div>
       </div>
     </section>

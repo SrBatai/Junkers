@@ -1,7 +1,7 @@
 import {
   CrosshairIcon,
   LockSimpleIcon,
-  SealCheckIcon,
+  RankingIcon,
   SkullIcon,
   TrophyIcon,
   UsersThreeIcon,
@@ -18,25 +18,25 @@ const rules = [
   {
     icon: CrosshairIcon,
     title: "Elige un equipo",
-    body: "Uno por jornada: el que creas que va a ganar su partido.",
+    body: "Uno por ronda, de la competición que se está jugando.",
     tone: "base",
   },
   {
     icon: LockSimpleIcon,
     title: "Queda bloqueado",
-    body: "No puedes repetirlo en toda la liga. Guarda a los grandes para cuando duela.",
+    body: "No puedes repetirlo en todo el torneo. Guarda a los favoritos para cuando duela.",
     tone: "base",
   },
   {
-    icon: SealCheckIcon,
-    title: "Si gana, sigues",
-    body: "Sobrevives y pasas a la siguiente jornada.",
+    icon: RankingIcon,
+    title: "En Cashout, top 2",
+    body: "Partidas de cuatro equipos: el tuyo tiene que acabar entre los dos primeros.",
     tone: "base",
   },
   {
     icon: SkullIcon,
-    title: "Si empata o pierde, fuera",
-    body: "El empate cuenta como derrota. Sin excepciones.",
+    title: "En Final Round, gana o fuera",
+    body: "Cara a cara 3v3. Si tu equipo pierde, estás eliminado.",
     tone: "danger",
   },
   {
@@ -66,8 +66,8 @@ export function HowItWorks() {
                 <span className="text-pink">Una sola vida.</span>
               </h2>
               <p className="mt-6 max-w-[30rem] text-lg leading-relaxed text-mute">
-                Decenas de jornadas por delante y cada equipo disponible una sola vez. La estrategia empieza
-                el primer día, porque cada elección puede ser la última.
+                Varias rondas por delante y cada equipo disponible una sola vez. La estrategia empieza en la
+                primera ronda, porque cada elección puede ser la última.
               </p>
             </Reveal>
           </div>

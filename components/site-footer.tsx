@@ -8,7 +8,7 @@ export function SiteFooter() {
         <div className="md:col-span-5">
           <Logo />
           <p className="mt-5 max-w-[26rem] leading-relaxed text-mute">
-            Elige un equipo. Si no gana, quedas eliminado. Sé el último y llévate todo el bote.
+            Elige un equipo de THE FINALS en cada ronda. Si cae, caes con él. Sé el último y llévate el bote.
           </p>
         </div>
 
@@ -25,10 +25,10 @@ export function SiteFooter() {
         </nav>
 
         <div className="flex flex-col gap-3 border-t border-white/[0.07] pt-8 text-sm text-dim md:col-span-12 md:flex-row md:justify-between">
-          <p>© {new Date().getFullYear()} Squid League. Gratis para jugar.</p>
+          <p>© {new Date().getFullYear()} Last Squad. Proyecto fan, gratis para jugar.</p>
           <p className="max-w-[40rem] md:text-right">
-            Squid League es un juego independiente y no está afiliado a LaLiga, la Premier League ni a ningún
-            club.
+            Last Squad no está afiliado, patrocinado ni aprobado por Embark Studios. THE FINALS es una marca
+            de Embark Studios AB. Los nombres de los equipos pertenecen a sus respectivos dueños.
           </p>
         </div>
       </div>
